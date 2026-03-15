@@ -4,6 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JisClock</title>
+    <meta
+      name="description"
+      content="JisClock adalah jam analog 24 jam dengan jam digital, tanggal, hari, zona waktu, dan dukungan install ke layar utama HP (PWA)."
+    />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="JisClock" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="JisClock - Jam Analog 24 Jam" />
+    <meta
+      property="og:description"
+      content="Jam analog 24 jam modern dengan jam digital, hari, tanggal, dan zona waktu."
+    />
+    <meta property="og:locale" content="id_ID" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="JisClock - Jam Analog 24 Jam" />
+    <meta
+      name="twitter:description"
+      content="Jam analog 24 jam modern dengan jam digital, hari, tanggal, dan zona waktu."
+    />
+    <link rel="manifest" href="manifest.webmanifest?v=2" />
+    <link rel="canonical" href="./" />
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="icons/icon-192.svg?v=2" />
     <link id="favicon" rel="icon" type="image/png" href="" />
     <style>
       /* Variabel Tema Terang (Light Mode) */
@@ -63,7 +88,7 @@
         max-height: 500px;
         background-color: var(--clock-bg);
         border: 8px solid var(--clock-border);
-        border-radius: 50%;
+        border-radius: 60%;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         transition:
           background-color 0.4s ease,
@@ -197,6 +222,7 @@
       const secHand = document.getElementById("second");
       const msHand = document.getElementById("ms");
       const favicon = document.getElementById("favicon");
+      const appleTouchIcon = document.getElementById("apple-touch-icon");
 
       // Setup Canvas untuk Favicon
       const canvas = document.createElement("canvas");
@@ -244,6 +270,12 @@
         ctx.restore();
 
         favicon.href = canvas.toDataURL("image/png");
+
+        // Sinkronkan ikon sentuh untuk mobile browser (best effort).
+        // Sebagian OS menyimpan cache ikon app saat install, jadi perubahan tidak selalu instan.
+        if (appleTouchIcon) {
+          appleTouchIcon.href = canvas.toDataURL("image/png");
+        }
       }
 
       function setDynamicTitle(hour, min) {
@@ -320,6 +352,15 @@
 
       // Mulai Animasi
       requestAnimationFrame(animateClock);
+
+      // Daftarkan Service Worker agar memenuhi syarat install PWA.
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js?v=2").catch(() => {
+            // Abaikan error register agar jam utama tetap berjalan.
+          });
+        });
+      }
     </script>
   </body>
 </html>
