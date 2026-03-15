@@ -82,8 +82,8 @@
       /* Desain Responsif Jam */
       .clock-container {
         position: relative;
-        width: 50vmin;
-        height: 50vmin;
+        width: 82vmin;
+        height: 82vmin;
         max-width: 500px;
         max-height: 500px;
         background-color: var(--clock-bg);
@@ -103,13 +103,13 @@
 
       .number {
         position: absolute;
-        width: 30px;
-        height: 30px;
-        margin: -15px 0 0 -15px; /* Pusatkan titik kordinat */
+        width: 28px;
+        height: 28px;
+        margin: -14px 0 0 -14px; /* Pusatkan titik kordinat */
         text-align: center;
-        line-height: 30px;
+        line-height: 28px;
         font-weight: 600;
-        font-size: 1.2rem;
+        font-size: 1rem;
       }
 
       /* Styling Jarum Jam */
@@ -198,23 +198,46 @@
     <script>
       // 1. GENERATE ANGKA 24 JAM
       const numbersContainer = document.getElementById("numbers");
-      const radius = 45; // Jarak angka dari pusat (dalam persentase)
+      const clockContainer = document.querySelector(".clock-container");
+      const numberElements = [];
 
       for (let i = 1; i <= 24; i++) {
         const num = document.createElement("div");
         num.className = "number";
         num.innerText = i;
-
-        // Kalkulasi posisi X dan Y menggunakan trigonometri
-        // 360 derajat / 24 jam = 15 derajat per jam
-        const angle = i * 15 * (Math.PI / 180);
-        const x = Math.sin(angle) * radius;
-        const y = -Math.cos(angle) * radius;
-
-        num.style.left = `calc(50% + ${x}%)`;
-        num.style.top = `calc(50% + ${y}%)`;
+        numberElements.push(num);
         numbersContainer.appendChild(num);
       }
+
+      function layoutClockNumbers() {
+        const clockSize = clockContainer.clientWidth;
+        const numberSize = Math.max(18, Math.min(34, clockSize * 0.085));
+        const fontSize = Math.max(11, numberSize * 0.48);
+        const radiusPx = clockSize / 2 - numberSize * 0.95 - 8;
+
+        numberElements.forEach((num, index) => {
+          const value = index + 1;
+
+          // Kalkulasi posisi X dan Y menggunakan trigonometri
+          // 360 derajat / 24 jam = 15 derajat per jam
+          const angle = value * 15 * (Math.PI / 180);
+          const x = Math.sin(angle) * radiusPx;
+          const y = -Math.cos(angle) * radiusPx;
+
+          num.style.width = `${numberSize}px`;
+          num.style.height = `${numberSize}px`;
+          num.style.marginLeft = `-${numberSize / 2}px`;
+          num.style.marginTop = `-${numberSize / 2}px`;
+          num.style.lineHeight = `${numberSize}px`;
+          num.style.fontSize = `${fontSize}px`;
+          num.style.left = `calc(50% + ${x}px)`;
+          num.style.top = `calc(50% + ${y}px)`;
+        });
+      }
+
+      layoutClockNumbers();
+      window.addEventListener("resize", layoutClockNumbers);
+      window.addEventListener("orientationchange", layoutClockNumbers);
 
       // 2. LOGIKA ANIMASI & FAVICON
       const hourHand = document.getElementById("hour");
