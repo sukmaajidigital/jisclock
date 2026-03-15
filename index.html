@@ -233,9 +233,10 @@
         const min = now.getMinutes();
         const hour = now.getHours();
 
-        // Kalkulasi Rotasi (Smooth continuous sweep)
+        // Kalkulasi Rotasi
         const msAngle = (ms / 1000) * 360;
-        const secAngle = (sec / 60) * 360 + (ms / 1000) * 6;
+        // Detik: loncat tiap detik (tidak smooth)
+        const secAngle = (sec / 60) * 360;
         const minAngle = (min / 60) * 360 + (sec / 60) * 6;
         // Format 24 Jam: 360 derajat / 24 = 15 derajat per jam
         const hourAngle = (hour / 24) * 360 + (min / 60) * 15;
