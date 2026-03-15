@@ -99,6 +99,15 @@
         position: absolute;
         width: 100%;
         height: 100%;
+        z-index: 9;
+      }
+
+      .radar-layer {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 7;
       }
 
       .number {
@@ -186,6 +195,7 @@
   <body>
     <div class="clock-container">
       <div class="numbers" id="numbers"></div>
+      <canvas id="radar-layer" class="radar-layer"></canvas>
       <div class="hand hour-hand" id="hour"></div>
       <div class="hand minute-hand" id="minute"></div>
       <div class="hand second-hand" id="second"></div>
@@ -199,7 +209,63 @@
       // 1. GENERATE ANGKA 24 JAM
       const numbersContainer = document.getElementById("numbers");
       const clockContainer = document.querySelector(".clock-container");
+      const radarCanvas = document.getElementById("radar-layer");
+      const radarCtx = radarCanvas.getContext("2d");
       const numberElements = [];
+
+      function hexToRgba(hex, alpha) {
+        const clean = hex.trim().replace("#", "");
+        if (clean.length !== 6) {
+          return `rgba(59,130,246,${alpha})`;
+        }
+
+        const r = parseInt(clean.slice(0, 2), 16);
+        const g = parseInt(clean.slice(2, 4), 16);
+        const b = parseInt(clean.slice(4, 6), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+
+      function resizeRadarCanvas() {
+        const size = Math.max(1, Math.floor(clockContainer.clientWidth));
+        const dpr = window.devicePixelRatio || 1;
+
+        radarCanvas.width = Math.floor(size * dpr);
+        radarCanvas.height = Math.floor(size * dpr);
+        radarCanvas.style.width = `${size}px`;
+        radarCanvas.style.height = `${size}px`;
+        radarCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        radarCtx.clearRect(0, 0, size, size);
+      }
+
+      function drawMsRadarTrail(msAngle) {
+        const size = clockContainer.clientWidth;
+        const center = size / 2;
+        const radius = size * 0.42;
+        const msColor =
+          getComputedStyle(document.documentElement).getPropertyValue("--hand-ms") || "#3b82f6";
+        const bgColor =
+          getComputedStyle(document.documentElement).getPropertyValue("--clock-bg") || "#ffffff";
+
+        // Pudar perlahan agar jejak terlihat seperti sweep radar.
+        radarCtx.fillStyle = hexToRgba(bgColor, 0.07);
+        radarCtx.fillRect(0, 0, size, size);
+
+        for (let i = 0; i < 12; i++) {
+          const trailAngle = msAngle - i * 2.4;
+          const rad = trailAngle * (Math.PI / 180);
+          const x = center + Math.sin(rad) * radius;
+          const y = center - Math.cos(rad) * radius;
+          const alpha = (1 - i / 12) ** 1.7 * 0.65;
+
+          radarCtx.beginPath();
+          radarCtx.moveTo(center, center);
+          radarCtx.lineTo(x, y);
+          radarCtx.strokeStyle = hexToRgba(msColor, alpha);
+          radarCtx.lineWidth = Math.max(1, size * 0.006);
+          radarCtx.lineCap = "round";
+          radarCtx.stroke();
+        }
+      }
 
       for (let i = 1; i <= 24; i++) {
         const num = document.createElement("div");
@@ -214,6 +280,8 @@
         const numberSize = Math.max(18, Math.min(34, clockSize * 0.085));
         const fontSize = Math.max(11, numberSize * 0.48);
         const radiusPx = clockSize / 2 - numberSize * 0.95 - 8;
+
+        resizeRadarCanvas();
 
         numberElements.forEach((num, index) => {
           const value = index + 1;
@@ -379,6 +447,7 @@
         secHand.style.transform = `rotate(${secAngle}deg)`;
         minHand.style.transform = `rotate(${minAngle}deg)`;
         hourHand.style.transform = `rotate(${hourAngle}deg)`;
+        drawMsRadarTrail(msAngle);
 
         // Update Favicon (Dibatasi 1 detik sekali agar tidak membebani memori browser)
         if (now.getTime() - lastFaviconUpdate > 1000) {
