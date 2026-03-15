@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jam Analog 24 Jam</title>
+    <title>JisClock</title>
     <link id="favicon" rel="icon" type="image/png" href="" />
     <style>
       /* Variabel Tema Terang (Light Mode) */
@@ -246,6 +246,12 @@
         favicon.href = canvas.toDataURL("image/png");
       }
 
+      function setDynamicTitle(hour, min) {
+        // Format 2 digit
+        const pad = (n) => n.toString().padStart(2, "0");
+        document.title = `Jam ${pad(hour)}:${pad(min)} - JisClock`;
+      }
+
       function animateClock() {
         function updateDigitalClock() {
           const now = new Date();
@@ -307,6 +313,7 @@
           lastFaviconUpdate = now.getTime();
         }
 
+        setDynamicTitle(hour, min);
         updateDigitalClock();
         requestAnimationFrame(animateClock);
       }
