@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jam Analog 24 Jam</title>
+    <link id="favicon" rel="icon" type="image/png" href="" />
+    <style>
+      /* Variabel Tema Terang (Light Mode) */
+      :root {
+        --bg-color: #f8fafc;
+        --clock-bg: #ffffff;
+        --clock-border: #e2e8f0;
+        --text-color: #334155;
+        --hand-hour: #0f172a;
+        --hand-min: #64748b;
+        --hand-sec: #e11d48;
+        --hand-ms: #3b82f6;
+        --dot-color: #0f172a;
+      }
+
+      /* Variabel Tema Gelap (Dark Mode) */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg-color: #0f172a;
+          --clock-bg: #1e293b;
+          --clock-border: #334155;
+          --text-color: #f8fafc;
+          --hand-hour: #f8fafc;
+          --hand-min: #94a3b8;
+          --hand-sec: #fb7185;
+          --hand-ms: #60a5fa;
+          --dot-color: #f8fafc;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        transition:
+          background-color 0.4s ease,
+          color 0.4s ease;
+      }
+
+      /* Desain Responsif Jam */
+      .clock-container {
+        position: relative;
+        width: 85vmin;
+        height: 85vmin;
+        max-width: 500px;
+        max-height: 500px;
+        background-color: var(--clock-bg);
+        border: 8px solid var(--clock-border);
+        border-radius: 50%;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        transition:
+          background-color 0.4s ease,
+          border-color 0.4s ease;
+      }
+
+      .numbers {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
+
+      .number {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        margin: -15px 0 0 -15px; /* Pusatkan titik kordinat */
+        text-align: center;
+        line-height: 30px;
+        font-weight: 600;
+        font-size: 1.2rem;
+      }
+
+      /* Styling Jarum Jam */
+      .hand {
+        position: absolute;
+        bottom: 50%;
+        left: 50%;
+        transform-origin: bottom center;
+        border-radius: 10px;
+        z-index: 10;
+      }
+
+      .hour-hand {
+        width: 6px;
+        height: 25%;
+        background-color: var(--hand-hour);
+        margin-left: -3px;
+      }
+
+      .minute-hand {
+        width: 4px;
+        height: 35%;
+        background-color: var(--hand-min);
+        margin-left: -2px;
+      }
+
+      .second-hand {
+        width: 2px;
+        height: 42%;
+        background-color: var(--hand-sec);
+        margin-left: -1px;
+        z-index: 11;
+      }
+
+      .ms-hand {
+        width: 1px;
+        height: 46%;
+        background-color: var(--hand-ms);
+        margin-left: -0.5px;
+        z-index: 12;
+        opacity: 0.7;
+      }
+
+      .center-dot {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 16px;
+        height: 16px;
+        background-color: var(--dot-color);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 15;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="clock-container">
+      <div class="numbers" id="numbers"></div>
+      <div class="hand hour-hand" id="hour"></div>
+      <div class="hand minute-hand" id="minute"></div>
+      <div class="hand second-hand" id="second"></div>
+      <div class="hand ms-hand" id="ms"></div>
+      <div class="center-dot"></div>
+    </div>
+
+    <script>
+      // 1. GENERATE ANGKA 24 JAM
+      const numbersContainer = document.getElementById("numbers");
+      const radius = 45; // Jarak angka dari pusat (dalam persentase)
+
+      for (let i = 1; i <= 24; i++) {
+        const num = document.createElement("div");
+        num.className = "number";
+        num.innerText = i;
+
+        // Kalkulasi posisi X dan Y menggunakan trigonometri
+        // 360 derajat / 24 jam = 15 derajat per jam
+        const angle = i * 15 * (Math.PI / 180);
+        const x = Math.sin(angle) * radius;
+        const y = -Math.cos(angle) * radius;
+
+        num.style.left = `calc(50% + ${x}%)`;
+        num.style.top = `calc(50% + ${y}%)`;
+        numbersContainer.appendChild(num);
+      }
+
+      // 2. LOGIKA ANIMASI & FAVICON
+      const hourHand = document.getElementById("hour");
+      const minHand = document.getElementById("minute");
+      const secHand = document.getElementById("second");
+      const msHand = document.getElementById("ms");
+      const favicon = document.getElementById("favicon");
+
+      // Setup Canvas untuk Favicon
+      const canvas = document.createElement("canvas");
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext("2d");
+      let lastFaviconUpdate = 0;
+
+      function updateFavicon(hourAngle, minAngle) {
+        ctx.clearRect(0, 0, 64, 64);
+        const isDark =
+          window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+        // Background Favicon
+        ctx.beginPath();
+        ctx.arc(32, 32, 30, 0, 2 * Math.PI);
+        ctx.fillStyle = isDark ? "#1e293b" : "#ffffff";
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = isDark ? "#334155" : "#e2e8f0";
+        ctx.stroke();
+
+        // Jarum Jam Favicon
+        ctx.save();
+        ctx.translate(32, 32);
+        ctx.rotate(hourAngle * (Math.PI / 180));
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -12);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = isDark ? "#f8fafc" : "#0f172a";
+        ctx.stroke();
+        ctx.restore();
+
+        // Jarum Menit Favicon
+        ctx.save();
+        ctx.translate(32, 32);
+        ctx.rotate(minAngle * (Math.PI / 180));
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -22);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = isDark ? "#94a3b8" : "#64748b";
+        ctx.stroke();
+        ctx.restore();
+
+        favicon.href = canvas.toDataURL("image/png");
+      }
+
+      function animateClock() {
+        const now = new Date();
+        const ms = now.getMilliseconds();
+        const sec = now.getSeconds();
+        const min = now.getMinutes();
+        const hour = now.getHours();
+
+        // Kalkulasi Rotasi (Smooth continuous sweep)
+        const msAngle = (ms / 1000) * 360;
+        const secAngle = (sec / 60) * 360 + (ms / 1000) * 6;
+        const minAngle = (min / 60) * 360 + (sec / 60) * 6;
+        // Format 24 Jam: 360 derajat / 24 = 15 derajat per jam
+        const hourAngle = (hour / 24) * 360 + (min / 60) * 15;
+
+        // Terapkan Rotasi
+        msHand.style.transform = `rotate(${msAngle}deg)`;
+        secHand.style.transform = `rotate(${secAngle}deg)`;
+        minHand.style.transform = `rotate(${minAngle}deg)`;
+        hourHand.style.transform = `rotate(${hourAngle}deg)`;
+
+        // Update Favicon (Dibatasi 1 detik sekali agar tidak membebani memori browser)
+        if (now.getTime() - lastFaviconUpdate > 1000) {
+          updateFavicon(hourAngle, minAngle);
+          lastFaviconUpdate = now.getTime();
+        }
+
+        requestAnimationFrame(animateClock);
+      }
+
+      // Mulai Animasi
+      requestAnimationFrame(animateClock);
+    </script>
+  </body>
+</html>
